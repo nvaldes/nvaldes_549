@@ -3,8 +3,10 @@ package edu.stevens.cs549.ftpserver;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -108,8 +110,26 @@ public class Server extends UnicastRemoteObject
     	public GetThread (ServerSocket s, FileInputStream f) { dataChan = s; file = f; }
     	public void run () {
     		/*
-    		 * TODO: Process a client request to transfer a file.
+    		 * DONE: Process a client request to transfer a file.
     		 */
+    		try {
+				Socket xfer = dataChan.accept();
+				OutputStream os = xfer.getOutputStream();
+				byte[] buf = new byte[512];
+				int nbytes = file.read(buf, 0, 512);
+				while (nbytes > 0) {
+					os.write(buf, 0, nbytes);
+					nbytes = file.read(buf, 0, 512);
+				}
+				os.close();
+				file.close();
+			} catch (IOException e) {
+				// Auto-generated catch block
+				e.printStackTrace();
+			}
+    		
+    		
+    		
     	}
     }
     
@@ -119,23 +139,80 @@ public class Server extends UnicastRemoteObject
         } else if (mode == Mode.ACTIVE) {
         	Socket xfer = new Socket (clientSocket.getAddress(), clientSocket.getPort());
         	/*
-        	 * TODO: connect to client socket to transfer file.
+        	 * DONE: connect to client socket to transfer file.
         	 */
-        	InputStream in = new FileInputStream(path()+file);
-
-        	/*
-			 * End TODO.
-			 */
+        	InputStream is = new FileInputStream(path()+file);
+        	OutputStream os = xfer.getOutputStream();
+        	byte[] buf = new byte[512];
+        	int nbytes = is.read(buf, 0, 512);
+        	while (nbytes > 0) {
+        		os.write(buf, 0, nbytes);
+        		nbytes = is.read(buf, 0, 512);
+        	}
+        	is.close();
+        	os.close();
+        	xfer.close();
         } else if (mode == Mode.PASSIVE) {
             FileInputStream f = new FileInputStream(path()+file);
             new Thread (new GetThread(dataChan, f)).start();
         }
     }
     
+    private static class PutThread implements Runnable {
+    	private ServerSocket dataChan = null;
+    	private FileOutputStream file = null;
+    	public PutThread (ServerSocket s, FileOutputStream f) { dataChan = s; file = f; }
+    	public void run () {
+    		/*
+    		 * DONE: Process a client request to transfer a file.
+    		 */
+    		try {
+				Socket xfer = dataChan.accept();
+				InputStream is = xfer.getInputStream();
+				byte[] buf = new byte[512];
+				int nbytes = is.read(buf, 0, 512);
+				while (nbytes > 0) {
+					file.write(buf, 0, nbytes);
+					nbytes = is.read(buf, 0, 512);
+				}
+				is.close();
+				file.close();
+			} catch (IOException e) {
+				// Auto-generated catch block
+				e.printStackTrace();
+			}
+    		
+    		
+    		
+    	}
+    }
+    
     public void put (String file) throws IOException, FileNotFoundException, RemoteException {
     	/*
-    	 * TODO: Finish put (both ACTIVE and PASSIVE).
+    	 * DONE: Finish put (both ACTIVE and PASSIVE).
     	 */
+        if (!valid(file)) {
+            throw new IOException("Bad file name: " + file);
+        } else if (mode == Mode.ACTIVE) {
+        	Socket xfer = new Socket (clientSocket.getAddress(), clientSocket.getPort());
+        	/*
+        	 * DONE: connect to client socket to transfer file.
+        	 */
+        	InputStream is = xfer.getInputStream();
+        	OutputStream os = new FileOutputStream(path()+file);
+        	byte[] buf = new byte[512];
+        	int nbytes = is.read(buf, 0, 512);
+        	while (nbytes > 0) {
+        		os.write(buf, 0, nbytes);
+        		nbytes = is.read(buf, 0, 512);
+        	}
+        	is.close();
+        	os.close();
+        	xfer.close();
+        } else if (mode == Mode.PASSIVE) {
+            FileOutputStream f = new FileOutputStream(path()+file);
+            new Thread (new PutThread(dataChan, f)).start();
+        }
     }
     
     public String[] dir () throws RemoteException {

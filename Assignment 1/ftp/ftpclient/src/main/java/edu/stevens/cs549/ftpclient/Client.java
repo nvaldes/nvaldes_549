@@ -8,21 +8,26 @@ package edu.stevens.cs549.ftpclient;
 import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.Properties;
 import java.util.logging.Logger;
 
 import org.apache.log4j.PropertyConfigurator;
 
 import edu.stevens.cs549.ftpinterface.IServer;
+import edu.stevens.cs549.ftpinterface.IServerFactory;
 
 /**
  * 
@@ -63,10 +68,11 @@ public class Client {
 			int serverPort = Integer.parseInt((String) props.get("server.port"));
 			
 			/*
-			 * TODO: Get a server proxy.
+			 * DONE: Get a server proxy.
 			 */
-			
-			IServer server = null;
+			Registry registry = LocateRegistry.getRegistry(serverMachine, serverPort);
+			IServerFactory factory = (IServerFactory) registry.lookup(serverName);
+			IServer server = factory.createServer();
 			
 			/*
 			 * Start CLI.  Second argument should be server proxy.
@@ -229,23 +235,28 @@ public class Client {
 			 * active mode.
 			 */
 			private ServerSocket dataChan = null;
-			private FileOutputStream file = null;
+			private FileOutputStream os = null;
 
 			public GetThread(ServerSocket s, FileOutputStream f) {
 				dataChan = s;
-				file = f;
+				os = f;
 			}
 
 			public void run() {
 				try {
 					/*
-					 * TODO: Complete this thread.
+					 * DONE: Complete this thread.
 					 */
 					Socket xfer = dataChan.accept();
-
-					/*
-					 * End TODO
-					 */
+					InputStream is = xfer.getInputStream();
+					byte[] buf = new byte[512];
+					int nbytes = is.read(buf, 0, 512);
+					while (nbytes > 0) {
+						os.write(buf, 0, nbytes);
+						nbytes = is.read(buf, 0, 512);
+					}
+					is.close();
+					os.close();
 				} catch (IOException e) {
 					msg("Exception: " + e);
 					e.printStackTrace();
@@ -258,11 +269,21 @@ public class Client {
 				try {
 					if (mode == Mode.PASSIVE) {
 						svr.get(inputs[1]);
-						FileOutputStream f = new FileOutputStream(inputs[1]);
+						FileOutputStream os = new FileOutputStream(inputs[1]);
 						Socket xfer = new Socket(serverAddress, serverSocket.getPort());
 						/*
-						 * TODO: connect to server socket to transfer file.
+						 * DONE: connect to server socket to transfer file.
 						 */
+						InputStream is = xfer.getInputStream();
+						byte[] buf = new byte[512];
+						int nbytes = is.read(buf, 0, 512);
+						while (nbytes > 0) {
+							os.write(buf, 0, nbytes);
+							nbytes = is.read(buf, 0, 512);
+						}
+						is.close();
+						os.close();
+						xfer.close();
 					} else if (mode == Mode.ACTIVE) {
 						FileOutputStream f = new FileOutputStream(inputs[1]);
 						new Thread(new GetThread(dataChan, f)).start();
@@ -275,13 +296,75 @@ public class Client {
 				}
 			}
 		}
+		
+		private static class PutThread implements Runnable {
+			/*
+			 * This client-side thread runs when the server is active mode and a
+			 * file upload is initiated. This thread listens for a connection
+			 * request from the server. The client-side server socket (...)
+			 * should have been created when the port command put the server in
+			 * active mode.
+			 */
+			private ServerSocket dataChan = null;
+			private FileInputStream is = null;
+
+			public PutThread(ServerSocket s, FileInputStream f) {
+				dataChan = s;
+				is = f;
+			}
+
+			public void run() {
+				try {
+					/*
+					 * DONE: Complete this thread.
+					 */
+					Socket xfer = dataChan.accept();
+					OutputStream os = xfer.getOutputStream();
+					byte[] buf = new byte[512];
+					int nbytes = is.read(buf, 0, 512);
+					while (nbytes > 0) {
+						os.write(buf, 0, nbytes);
+						nbytes = is.read(buf, 0, 512);
+					}
+					is.close();
+					os.close();
+				} catch (IOException e) {
+					msg("Exception: " + e);
+					e.printStackTrace();
+				}
+			}
+		}
 
 		public void put(String[] inputs) {
 			if (inputs.length == 2) {
 				try {
 					/*
-					 * TODO: Finish put (both ACTIVE and PASSIVE mode supported).
+					 * DONE: Finish put (both ACTIVE and PASSIVE mode supported).
 					 */
+					if (mode == Mode.PASSIVE) {
+						svr.get(inputs[1]);
+						FileInputStream is = new FileInputStream(inputs[1]);
+						Socket xfer = new Socket(serverAddress, serverSocket.getPort());
+						/*
+						 * DONE: connect to server socket to transfer file.
+						 */
+						OutputStream os = xfer.getOutputStream();
+						byte[] buf = new byte[512];
+						int nbytes = is.read(buf, 0, 512);
+						while (nbytes > 0) {
+							os.write(buf, 0, nbytes);
+							nbytes = is.read(buf, 0, 512);
+						}
+						is.close();
+						os.close();
+						xfer.close();
+					} else if (mode == Mode.ACTIVE) {
+						FileInputStream f = new FileInputStream(inputs[1]);
+						new Thread(new PutThread(dataChan, f)).start();
+						svr.put(inputs[1]);
+					} else {
+						msgln("GET: No mode set--use port or pasv command.");
+					}
 				} catch (Exception e) {
 					err(e);
 				}
