@@ -217,7 +217,12 @@ public class Server extends UnicastRemoteObject
     
     public String[] dir () throws RemoteException {
         // List the contents of the current directory.
-        return new File(path()).list();
+        String[] ret =  new File(path()).list();
+        if (ret == null) {
+        	throw new RemoteException("'" + path() + "' does not denote a directory.");
+        } else {
+        	return ret;
+        }
     }
 
 	public void cd(String dir) throws IOException, RemoteException {

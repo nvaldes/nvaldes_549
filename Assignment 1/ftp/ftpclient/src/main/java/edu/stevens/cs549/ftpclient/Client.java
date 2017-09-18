@@ -342,7 +342,7 @@ public class Client {
 					 * DONE: Finish put (both ACTIVE and PASSIVE mode supported).
 					 */
 					if (mode == Mode.PASSIVE) {
-						svr.get(inputs[1]);
+						svr.put(inputs[1]);
 						FileInputStream is = new FileInputStream(inputs[1]);
 						Socket xfer = new Socket(serverAddress, serverSocket.getPort());
 						/*
