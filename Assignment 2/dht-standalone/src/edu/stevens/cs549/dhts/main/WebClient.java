@@ -59,8 +59,18 @@ public class WebClient {
 	}
 
 	private Response putRequest(URI uri, Entity<?> entity) {
-		// TODO
-		
+		// DONE
+		try {
+			Response cr = client.target(uri)
+					.request(MediaType.APPLICATION_XML_TYPE)
+					.header(Time.TIME_STAMP, Time.advanceTime())
+					.put(entity);
+			processResponseTimestamp(cr);
+			return cr;
+		} catch (Exception e) {
+			error("Exception during GET request: " + e);
+			return null;
+		}
 	}
 	
 	private Response putRequest(URI uri) {
@@ -131,6 +141,36 @@ public class WebClient {
 			TableRep bindings = response.readEntity(TableRep.class);
 			return bindings;
 		}
+	}
+
+	public NodeInfo getClosestPrecedingFinger(NodeInfo info, int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void add(NodeInfo n, String k, String v) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void delete(NodeInfo n, String k, String v) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public NodeInfo findSuccessor(URI addr, int id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String[] get(NodeInfo n, String k) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public NodeInfo getSucc(NodeInfo info) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
