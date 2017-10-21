@@ -28,7 +28,7 @@ public class WebClient {
 	/*
 	 * Encapsulate Web client operations here.
 	 * 
-	 * TODO: Fill in missing operations.
+	 * DONE: Fill in missing operations.
 	 */
 
 	/*
@@ -57,6 +57,20 @@ public class WebClient {
 			return null;
 		}
 	}
+	
+	private Response deleteRequest(URI uri) {
+		try {
+			Response cr = client.target(uri)
+					.request(MediaType.APPLICATION_XML_TYPE)
+					.header(Time.TIME_STAMP, Time.advanceTime())
+					.delete();
+			processResponseTimestamp(cr);
+			return cr;
+		} catch (Exception e) {
+			error("Exception during GET request: " + e);
+			return null;
+		}
+	}
 
 	private Response putRequest(URI uri, Entity<?> entity) {
 		// DONE
@@ -68,7 +82,7 @@ public class WebClient {
 			processResponseTimestamp(cr);
 			return cr;
 		} catch (Exception e) {
-			error("Exception during GET request: " + e);
+			error("Exception during PUT request: " + e);
 			return null;
 		}
 	}
@@ -86,6 +100,8 @@ public class WebClient {
 	 * information.
 	 */
 	private GenericType<JAXBElement<NodeInfo>> nodeInfoType = new GenericType<JAXBElement<NodeInfo>>() {
+	};
+	private GenericType<JAXBElement<String[]>> stringArrayType = new GenericType<JAXBElement<String[]>>() {
 	};
 
 	/*
@@ -143,34 +159,70 @@ public class WebClient {
 		}
 	}
 
-	public NodeInfo getClosestPrecedingFinger(NodeInfo info, int id) {
-		// TODO Auto-generated method stub
-		return null;
+	public NodeInfo getClosestPrecedingFinger(NodeInfo node, int id) throws DHTBase.Failed {
+		URI path = UriBuilder.fromUri(node.addr).path("finger").queryParam("id", id).build();
+		info("client getClosestPrecedingFinger(" + path + ")");
+		Response response = getRequest(path);
+		if (response == null || response.getStatus() >= 300) {
+			throw new DHTBase.Failed("GET /finger?id=" + id);
+		} else {
+			NodeInfo resp = response.readEntity(nodeInfoType).getValue();
+			return resp;
+		}
 	}
 
-	public void add(NodeInfo n, String k, String v) {
-		// TODO Auto-generated method stub
-		
+	public void add(NodeInfo node, String k, String v) throws DHTBase.Failed {
+		URI path = UriBuilder.fromUri(node.addr).queryParam("key", k).queryParam("val", v).build();
+		info("client putBinding(" + path + ")");
+		Response response = putRequest(path);
+		if (response == null || response.getStatus() >= 300) {
+			throw new DHTBase.Failed("PUT binding");
+		}
 	}
 
-	public void delete(NodeInfo n, String k, String v) {
-		// TODO Auto-generated method stub
-		
+	public void delete(NodeInfo node, String k, String v) throws DHTBase.Failed {
+		URI path = UriBuilder.fromUri(node.addr).queryParam("key", k).queryParam("val", v).build();
+		info("client deleteBinding(" + path + ")");
+		Response response = deleteRequest(path);
+		if (response == null || response.getStatus() >= 300) {
+			throw new DHTBase.Failed("GET binding");
+		}		
 	}
 
-	public NodeInfo findSuccessor(URI addr, int id) {
-		// TODO Auto-generated method stub
-		return null;
+	public NodeInfo findSuccessor(URI addr, int id) throws DHTBase.Failed {
+		URI path = UriBuilder.fromUri(addr).path("find").queryParam("id", id).build();
+		info("client findSuccessor(" + path + ")");
+		Response response = getRequest(path);
+		if (response == null || response.getStatus() >= 300) {
+			throw new DHTBase.Failed("GET /find?id=" + id);
+		} else {
+			NodeInfo resp = response.readEntity(nodeInfoType).getValue();
+			return resp;
+		}
 	}
 
-	public String[] get(NodeInfo n, String k) {
-		// TODO Auto-generated method stub
-		return null;
+	public String[] get(NodeInfo node, String k) throws DHTBase.Failed {
+		URI path = UriBuilder.fromUri(node.addr).queryParam("key", k).build();
+		info("client getBinding(" + path + ")");
+		Response response = getRequest(path);
+		if (response == null || response.getStatus() >= 300) {
+			throw new DHTBase.Failed("GET binding");
+		} else {
+			String[] resp = response.readEntity(stringArrayType).getValue();
+			return resp;
+		}
 	}
 
-	public NodeInfo getSucc(NodeInfo info) {
-		// TODO Auto-generated method stub
-		return null;
+	public NodeInfo getSucc(NodeInfo info) throws DHTBase.Failed {
+		URI predPath = UriBuilder.fromUri(info.addr).path("succ").build();
+		info("client getSucc(" + predPath + ")");
+		Response response = getRequest(predPath);
+		if (response == null || response.getStatus() >= 300) {
+			throw new DHTBase.Failed("GET /pred");
+		} else {
+			NodeInfo succ = response.readEntity(nodeInfoType).getValue();
+			return succ;
+		}
 	}
 
 }

@@ -33,7 +33,7 @@ import edu.stevens.cs549.dhts.main.Time;
 
 public class NodeService {
 	
-	// TODO: add the missing operations
+	// DONE: add the missing operations
 
 	HttpHeaders headers;
 
@@ -75,6 +75,14 @@ public class NodeService {
 	private Response response(TableRow r) {
 		return Response.ok(tableRowRep(r)).header(Time.TIME_STAMP, Time.advanceTime()).build();
 	}
+	
+	private Response response(String[] s) {
+		return Response.ok(s).header(Time.TIME_STAMP, Time.advanceTime()).build();
+	}
+	
+	private Response responseNone() {
+		return Response.status(404).header(Time.TIME_STAMP, Time.advanceTime()).build();
+	}
 
 	private Response responseNull() {
 		return Response.notModified().header(Time.TIME_STAMP, Time.advanceTime()).build();
@@ -94,6 +102,12 @@ public class NodeService {
 		advanceTime();
 		info("getPred()");
 		return response(dht.getPred());
+	}
+	
+	public Response getSucc() {
+		advanceTime();
+		info("getSucc()");
+		return response(dht.getSucc());
 	}
 
 	public Response notify(TableRep predDb) {
@@ -120,6 +134,48 @@ public class NodeService {
 			return response(dht.findSuccessor(id));
 		} catch (Failed e) {
 			throw new WebApplicationException(Response.Status.SERVICE_UNAVAILABLE);
+		}
+	}
+
+	public Response closestPrecedingFinger(int id) {
+		advanceTime();
+		info("getFinger()");
+		return response(dht.closestPrecedingFinger(id));
+	}
+
+	public Response getBinding(String key) {
+		try {
+			advanceTime();
+			info("getBinding()");
+			return response(dht.get(key));
+
+		} catch (Invalid e) {
+			return responseNone();
+		}
+
+	}
+
+	public Response addBinding(String key, String val) {
+		try {
+			advanceTime();
+			info("putBinding()");
+			dht.add(key, val);
+			return response();
+
+		} catch (Invalid e) {
+			return responseNone();
+		}
+	}
+
+	public Response deleteBinding(String key, String val) {
+		try {
+			advanceTime();
+			info("getBinding()");
+			dht.delete(key, val);
+			return response();
+
+		} catch (Invalid e) {
+			return responseNone();
 		}
 	}
 	
