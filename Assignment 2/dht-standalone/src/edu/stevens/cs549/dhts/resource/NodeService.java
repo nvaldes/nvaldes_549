@@ -76,10 +76,6 @@ public class NodeService {
 		return Response.ok(tableRowRep(r)).header(Time.TIME_STAMP, Time.advanceTime()).build();
 	}
 	
-	private Response response(String[] s) {
-		return Response.ok(s).header(Time.TIME_STAMP, Time.advanceTime()).build();
-	}
-	
 	private Response responseNone() {
 		return Response.status(404).header(Time.TIME_STAMP, Time.advanceTime()).build();
 	}
@@ -147,7 +143,7 @@ public class NodeService {
 		try {
 			advanceTime();
 			info("getBinding()");
-			return response(dht.get(key));
+			return response(new TableRow(key, dht.get(key)));
 
 		} catch (Invalid e) {
 			return responseNone();
@@ -163,6 +159,7 @@ public class NodeService {
 			return response();
 
 		} catch (Invalid e) {
+			info("invalid PUT binding");
 			return responseNone();
 		}
 	}

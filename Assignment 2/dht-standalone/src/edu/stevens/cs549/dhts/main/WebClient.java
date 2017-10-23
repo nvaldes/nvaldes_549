@@ -101,7 +101,7 @@ public class WebClient {
 	 */
 	private GenericType<JAXBElement<NodeInfo>> nodeInfoType = new GenericType<JAXBElement<NodeInfo>>() {
 	};
-	private GenericType<JAXBElement<String[]>> stringArrayType = new GenericType<JAXBElement<String[]>>() {
+	private GenericType<JAXBElement<TableRow>> tableRowType = new GenericType<JAXBElement<TableRow>>() {
 	};
 
 	/*
@@ -175,8 +175,8 @@ public class WebClient {
 		URI path = UriBuilder.fromUri(node.addr).queryParam("key", k).queryParam("val", v).build();
 		info("client putBinding(" + path + ")");
 		Response response = putRequest(path);
-		if (response == null || response.getStatus() >= 300) {
-			throw new DHTBase.Failed("PUT binding");
+		if (response.getStatus() >= 300) {
+			throw new DHTBase.Failed("PUT binding " + path);
 		}
 	}
 
@@ -184,8 +184,8 @@ public class WebClient {
 		URI path = UriBuilder.fromUri(node.addr).queryParam("key", k).queryParam("val", v).build();
 		info("client deleteBinding(" + path + ")");
 		Response response = deleteRequest(path);
-		if (response == null || response.getStatus() >= 300) {
-			throw new DHTBase.Failed("GET binding");
+		if (response.getStatus() >= 300) {
+			throw new DHTBase.Failed("DELETE binding " + path);
 		}		
 	}
 
@@ -201,14 +201,14 @@ public class WebClient {
 		}
 	}
 
-	public String[] get(NodeInfo node, String k) throws DHTBase.Failed {
+	public TableRow get(NodeInfo node, String k) throws DHTBase.Failed {
 		URI path = UriBuilder.fromUri(node.addr).queryParam("key", k).build();
 		info("client getBinding(" + path + ")");
 		Response response = getRequest(path);
 		if (response == null || response.getStatus() >= 300) {
-			throw new DHTBase.Failed("GET binding");
+			throw new DHTBase.Failed("GET binding " + path);
 		} else {
-			String[] resp = response.readEntity(stringArrayType).getValue();
+			TableRow resp = response.readEntity(tableRowType).getValue();
 			return resp;
 		}
 	}
