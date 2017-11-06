@@ -1,6 +1,7 @@
 package edu.stevens.cs549.dhts.activity;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriInfo;
@@ -115,8 +116,8 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		if (localInfo.addr.equals(info.addr)) {
 			return getSucc();
 		} else {
-			// TODO: Do the Web service call
-			return null;
+			// DONE: Do the Web service call
+			return client.getSucc(info);
 		}
 	}
 
@@ -149,9 +150,9 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 			return getPred();
 		} else {
 			/*
-			 * TODO: Do the Web service call
+			 * DONE: Do the Web service call
 			 */
-			return null;
+			return client.getPred(info);
 		}
 	}
 
@@ -182,9 +183,9 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		} else {
 			if (IRouting.USE_FINGER_TABLE) {
 				/*
-				 * TODO: Do the Web service call to the remote node.
+				 * DONE: Do the Web service call to the remote node.
 				 */
-				return null;
+				return client.getClosestPrecedingFinger(info, id);
 			} else {
 				/*
 				 * Without finger tables, just use the successor pointer.
@@ -469,9 +470,9 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 			/*
 			 * Retrieve the bindings at the specified node.
 			 * 
-			 * TODO: Do the Web service call.
+			 * DONE: Do the Web service call.
 			 */
-			return null;
+			return client.get(n, k).vals;
 		}
 	}
 
@@ -496,8 +497,9 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 			}
 		} else {
 			/*
-			 * TODO: Do the Web service call.
+			 * DONE: Do the Web service call.
 			 */
+			client.add(n, k, v);
 		}
 	}
 
@@ -548,8 +550,9 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 			}
 		} else {
 			/*
-			 * TODO: Do the Web service call.
+			 * DONE: Do the Web service call.
 			 */
+			client.delete(n, k, v);
 		}
 	}
 
@@ -617,9 +620,15 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	public void join(String uri) throws Failed, Invalid {
 		setPred(null);
 		NodeInfo info = getNodeInfo();
-		NodeInfo succ;
+		try {
+			setSucc(client.findSuccessor(new URI(uri), info.id));
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		stabilize();
+		
 		/*
-		 * TODO: Do a web service call to the node identified by "uri" and find
+		 * DONE?: Do a web service call to the node identified by "uri" and find
 		 * the successor of info.id, then setSucc(succ). Make sure to clear any
 		 * local bindings first of all, to maintain consistency of the ring. We
 		 * start afresh with the bindings that are transferred from the new
@@ -653,16 +662,17 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	 */
 	// Webmethod
 	public EventOutput listenForBindings(int id, String key) {
-		// TODO create event output stream and add to broadcaster
+		// TODO? create event output stream and add to broadcaster
 		EventOutput os = new EventOutput();
-		debug("listforBindings("+key+")");
+		debug("listenForBindings("+key+")");
 		state.addListener(id, key, os);
 		return os;
 	}
 	
 	// Webmethod
 	public void stopListening(int id, String key) {
-		// TODO remove event output stream from broadcaster
+		// DONE remove event output stream from broadcaster
+		state.removeListener(id, key);
 	}
 		
 	/*
@@ -678,7 +688,7 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		 * and key).  The client should send its own node id to identify itself
 		 * (for both the listen on and listen off requests).
 		 */
-
+		
 	}
 	
 	public void listenOff(String key) throws DHTBase.Failed {

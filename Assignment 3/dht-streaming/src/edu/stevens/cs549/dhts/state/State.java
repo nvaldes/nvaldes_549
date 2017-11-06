@@ -181,22 +181,29 @@ public class State implements IState, IRouting {
 
 	public synchronized void setFinger(int i, NodeInfo info) {
 		/*
-		 * TODO: Set the ith finger.
+		 * DONE: Set the ith finger.
 		 */
+		finger[i] = info;
 	}
 
 	public synchronized NodeInfo getFinger(int i) {
 		/*
-		 * TODO: Get the ith finger.
+		 * DONE: Get the ith finger.
 		 */
+		return finger[i];
 	}
 
 	public synchronized NodeInfo closestPrecedingFinger(int id) {
 		/*
-		 * TODO: Get closest preceding finger for id, to continue search at that
+		 * DONE: Get closest preceding finger for id, to continue search at that
 		 * node. Hint: See DHTBase.inInterval()
 		 */
-		return null;
+		for (int i = finger.length - 1; i >= 0; i--) {
+			if (DHTBase.inInterval(id, info.id, finger[i].id, false)) {
+				return finger[i];
+			}
+		}
+		return info;
 	}
 
 	public synchronized void routes() {
@@ -273,6 +280,10 @@ public class State implements IState, IRouting {
 	
 	private Map<Integer,Map<String,EventOutput>> outputs = new HashMap<Integer,Map<String,EventOutput>>();
 	
+	public void addListener(int id, String key, EventOutput os) {
+		// TODO Auto-generated method stub
+	}
+	
 	public void removeListener(int id, String key) {
 		// TODO Close the event output stream.
 	}
@@ -293,8 +304,12 @@ public class State implements IState, IRouting {
 	}
 	
 	public void removeCallback(String key) {
-		// TODO remove an existing callback (if any) for bindings on key.
+		// DONE remove an existing callback (if any) for bindings on key.
 		// Be sure to close the event stream from the broadcaster.
+		EventSource es = callbacks.remove(key);
+		if (es != null) {
+			es.close();
+		}
 	}
 	
 	public void listCallbacks() {
