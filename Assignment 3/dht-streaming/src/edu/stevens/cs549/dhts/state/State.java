@@ -84,7 +84,8 @@ public class State implements IState, IRouting {
 			dict.put(k, vl);
 		}
 		vl.add(v);
-		// TODO: broadcast an event to any listeners
+		// DONE: broadcast an event to any listeners
+		this.broadcastAddition(k, v);
 	}
 
 	public synchronized void delete(String k, String v) {
