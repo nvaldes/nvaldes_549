@@ -283,6 +283,18 @@ public class State implements IState, IRouting {
 	
 	public void addListener(int id, String key, EventOutput os) {
 		// TODO Auto-generated method stub
+		Map<String,EventOutput> curr = outputs.remove(id);
+		if (curr == null) {
+			curr = new HashMap<String,EventOutput>();
+		}
+		curr.put(key, os);
+		outputs.put(id, curr);
+		SseBroadcaster currBroadcaster = listeners.remove(key);
+		if (currBroadcaster == null) {
+			currBroadcaster = new SseBroadcaster();
+		}
+		currBroadcaster.add(os);
+		listeners.put(key, currBroadcaster);
 	}
 	
 	public void removeListener(int id, String key) {

@@ -184,10 +184,9 @@ public class NodeService {
 	}
 
 	public Response listenForBindings(int id, String key) {
-		advanceTime();
+//		advanceTime();
 		info("listenForBindings()");
-		dht.listenForBindings(id, key);
-		return response();
+		return response(dht.listenForBindings(id, key));
 	}
 	
 	public Response stopListening(int id, String key) {

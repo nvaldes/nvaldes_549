@@ -784,8 +784,8 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		WebTarget target = client.target(UriBuilder.fromUri(succ.addr).path("listen").queryParam("id", this.getNodeInfo().id).queryParam("key", skey).build());
 		EventSource eventSource = EventSource.target(target).build();
 		eventSource.register(listener, IDHTNode.NEW_BINDING_EVENT);
-		eventSource.open();
 		state.addCallback(skey, eventSource);
+		eventSource.open();
 	}
 	
 	public void listenOff(String key) throws DHTBase.Failed {
