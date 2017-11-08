@@ -14,7 +14,7 @@
 		<server.port.http>8080</server.port.http>
 
 		<!-- External DNS for AWS. -->
-		<server.external-dns>localhost</server.external-dns>
+		<server.host>localhost</server.host>
 
 		<!-- Where to distribute jar files (using mvn package). -->
 		<server.home>${user.home}</server.home>

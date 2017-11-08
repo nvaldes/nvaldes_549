@@ -287,10 +287,20 @@ public class State implements IState, IRouting {
 	
 	public void removeListener(int id, String key) {
 		// TODO Close the event output stream.
+		
 	}
 	
 	private void broadcastAddition(String key, String value) {
-		// TODO broadcast an added binding (use IDHTNode.NEW_BINDING_EVENT for event name).
+		// DONE broadcast an added binding (use IDHTNode.NEW_BINDING_EVENT for event name).
+		SseBroadcaster broadcaster = listeners.get(key);
+		if (broadcaster == null) {
+			return;
+		}
+		OutboundEvent event = new OutboundEvent.Builder()
+				.name(IDHTNode.NEW_BINDING_EVENT)
+				.data(String.class, value)
+				.build();
+		broadcaster.broadcast(event);
 	}
 	
 	/*

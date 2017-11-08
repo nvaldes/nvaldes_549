@@ -3,6 +3,7 @@ package edu.stevens.cs549.dhts.resource;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -35,7 +36,7 @@ import edu.stevens.cs549.dhts.main.Time;
 
 public class NodeService {
 	
-	// TODO? add the missing operations
+	// TODO add the missing operations
 
 	HttpHeaders headers;
 
@@ -182,8 +183,16 @@ public class NodeService {
 		}
 	}
 
-	public void stopListening(int id, String key) {
+	public Response listenForBindings(int id, String key) {
+		advanceTime();
+		info("listenForBindings()");
+		dht.listenForBindings(id, key);
+		return response();
+	}
+	
+	public Response stopListening(int id, String key) {
 		// TODO Auto-generated method stub
+		return null;
 		
 	}
 	

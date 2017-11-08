@@ -233,10 +233,18 @@ public class WebClient {
 	}
 	
 	public EventSource listenForBindings(NodeInfo node, int id, String skey) throws DHTBase.Failed {
-		// TODO listen for SSE subscription requests on http://.../dht/listen?key=<key>
+		// TODO? listen for SSE subscription requests on http://.../dht/listen?key=<key>
 		// On the service side, don't expect LT request or response headers for this request.
 		// Note: "id" is client's id, to enable us to stop event generation at the server.
-		return null;
+		URI path = UriBuilder.fromUri(node.addr).path("listen").queryParam("id", id).queryParam("key", skey).build();
+		info("client listenForBuindings(" + path + ")");
+		Response response = getRequest(path);
+		if (response == null || response.getStatus() >= 300) {
+			throw new DHTBase.Failed("GET /listen?id=" + id + "&key=" + skey);
+		} else {
+			EventSource resp = response.readEntity(EventSource.class);
+			return resp;
+		}
 	}
 
 	public void listenOff(NodeInfo node, int id, String skey) throws DHTBase.Failed {

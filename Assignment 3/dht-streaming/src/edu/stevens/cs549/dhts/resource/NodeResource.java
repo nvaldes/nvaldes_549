@@ -61,11 +61,17 @@ public class NodeResource {
 		int id = Integer.parseInt(index);
 		return new NodeService(headers, uriInfo).findSuccessor(id);
 	}
+	
+	@GET
+	@Path("listen")
+	public Response listenOn(@QueryParam("id") int id, @QueryParam("key") String key) {
+		return new NodeService(headers, uriInfo).listenForBindings(id, key);
+	}
 
 	@DELETE
 	@Path("listen")
-	public void listenOff(@QueryParam("id") int id, @QueryParam("key") String key) {
-		new NodeService(headers, uriInfo).stopListening(id, key);
+	public Response listenOff(@QueryParam("id") int id, @QueryParam("key") String key) {
+		return new NodeService(headers, uriInfo).stopListening(id, key);
 	}
 
 }

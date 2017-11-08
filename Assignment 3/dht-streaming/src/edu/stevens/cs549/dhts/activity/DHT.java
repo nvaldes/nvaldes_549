@@ -4,10 +4,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.media.sse.EventListener;
 import org.glassfish.jersey.media.sse.EventOutput;
+import org.glassfish.jersey.media.sse.EventSource;
+import org.glassfish.jersey.media.sse.SseFeature;
 
 import edu.stevens.cs549.dhts.main.Main;
 import edu.stevens.cs549.dhts.main.WebClient;
@@ -662,7 +668,7 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	 */
 	// Webmethod
 	public EventOutput listenForBindings(int id, String key) {
-		// TODO? create event output stream and add to broadcaster
+		// DONE create event output stream and add to broadcaster
 		EventOutput os = new EventOutput();
 		debug("listenForBindings("+key+")");
 		state.addListener(id, key, os);
@@ -678,9 +684,9 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	/*
 	 * Client-side callbacks
 	 */
-	public void listenOn(String key, EventListener listener) throws DHTBase.Failed {
+	public void listenOn(String skey, EventListener listener) throws DHTBase.Failed {
 		/*
-		 * TODO: Register a listener for new bindings under key, at the node
+		 * DONE: Register a listener for new bindings under key, at the node
 		 * where those bindings are stored.  The event source should
 		 * be registered in the state object, so the client can shut down the
 		 * event stream at this point.  The client will also need to contact the server
@@ -688,7 +694,21 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		 * and key).  The client should send its own node id to identify itself
 		 * (for both the listen on and listen off requests).
 		 */
-		
+		int id = NodeKey(skey);
+		NodeInfo succ;
+		//if the key's id is equal to the nodes id then add it locally
+		if (info.id == id) {
+			succ = this.getNodeInfo();
+		}
+		else {
+			succ = this.findSuccessor(id);
+		}
+		Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
+		WebTarget target = client.target(UriBuilder.fromUri(succ.addr).path("listen").queryParam("id", this.getNodeInfo().id).queryParam("key", skey).build());
+		EventSource eventSource = EventSource.target(target).build();
+		eventSource.register(listener, IDHTNode.NEW_BINDING_EVENT);
+		eventSource.open();
+		state.addCallback(skey, eventSource);
 	}
 	
 	public void listenOff(String key) throws DHTBase.Failed {
