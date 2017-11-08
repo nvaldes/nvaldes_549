@@ -487,7 +487,39 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	 */
 	// WebMethod
 	public String[] get(String k) throws Invalid {
-		return state.get(k);
+		/*
+		 * Validate that this binding can be stored here.
+		 */
+		int kid = DHTBase.NodeKey(k);
+		NodeInfo info = getNodeInfo();
+		NodeInfo pred = getPred();
+		NodeInfo succ = getSucc();
+
+		if (pred != null && inInterval(kid, pred.id, info.id, true)) {
+			/*
+			 * This node covers the interval in which k should be stored.
+			 */
+			return state.get(k);
+		} else if (pred == null && info.equals(getSucc())) {
+			/*
+			 * Single-node network.
+			 */
+			return state.get(k);
+		} else if (info.id == kid) {
+			/*
+			 * ???
+			 */
+			return state.get(k);		
+		} else if (pred == null && info.equals(getSucc())) {
+			severe("Add: predecessor is null but not a single-node network.");
+		} else if (succ != null) {
+			try {
+				return this.get(succ, k);
+			} catch (Failed e) {
+				throw new Invalid("Invalid key: " + k + " (id=" + kid + ")");
+			}
+		}
+		throw new Invalid("Invalid key: " + k + " (id=" + kid + ")");
 	}
 
 	/*
@@ -520,6 +552,7 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		int kid = DHTBase.NodeKey(k);
 		NodeInfo info = getNodeInfo();
 		NodeInfo pred = getPred();
+		NodeInfo succ = getSucc();
 
 		if (pred != null && inInterval(kid, pred.id, info.id, true)) {
 			/*
@@ -538,6 +571,12 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 			state.add(k, v);			
 		} else if (pred == null && info.equals(getSucc())) {
 			severe("Add: predecessor is null but not a single-node network.");
+		} else if (succ != null) {
+			try {
+				this.add(succ, k, v);
+			} catch (Failed e) {
+				throw new Invalid("Invalid key: " + k + " (id=" + kid + ")");
+			}
 		} else {
 			throw new Invalid("Invalid key: " + k + " (id=" + kid + ")");
 		}
@@ -567,7 +606,40 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	 */
 	// WebMethod
 	public void delete(String k, String v) throws Invalid {
-		state.delete(k, v);
+		/*
+		 * Validate that this binding can be stored here.
+		 */
+		int kid = DHTBase.NodeKey(k);
+		NodeInfo info = getNodeInfo();
+		NodeInfo pred = getPred();
+		NodeInfo succ = getSucc();
+
+		if (pred != null && inInterval(kid, pred.id, info.id, true)) {
+			/*
+			 * This node covers the interval in which k should be stored.
+			 */
+			state.delete(k, v);
+		} else if (pred == null && info.equals(getSucc())) {
+			/*
+			 * Single-node network.
+			 */
+			state.delete(k, v);
+		} else if (info.id == kid) {
+			/*
+			 * ???
+			 */
+			state.delete(k, v);			
+		} else if (pred == null && info.equals(getSucc())) {
+			severe("Add: predecessor is null but not a single-node network.");
+		} else if (succ != null) {
+			try {
+				this.delete(succ, k, v);
+			} catch (Failed e) {
+				throw new Invalid("Invalid key: " + k + " (id=" + kid + ")");
+			}
+		} else {
+			throw new Invalid("Invalid key: " + k + " (id=" + kid + ")");
+		}
 	}
 
 	/*
@@ -578,12 +650,13 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	 * Store a value under a key in the network.
 	 */
 	public void addNet(String skey, String v) throws Failed {
-		int id = NodeKey(skey);
-		//if the key's id is equal to the nodes id then add it locally
-		if (info.id == id)
+		NodeInfo pred = getPred();
+		int kid = NodeKey(skey);
+		//if this node covers the interval in which skey should be stored
+		if (pred != null && inInterval(kid, pred.id, info.id, true))
 			add(info, skey, v);
 		else {
-			NodeInfo succ = this.findSuccessor(id);
+			NodeInfo succ = this.findSuccessor(kid);
 			add(succ, skey, v);
 		}
 	}
@@ -592,12 +665,13 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	 * Get the values under a key in the network.
 	 */
 	public String[] getNet(String skey) throws Failed {
-		int id = NodeKey(skey);
-		// if the key's id is equal to the nodes id then get it locally
-		if (info.id == id)
+		NodeInfo pred = getPred();
+		int kid = NodeKey(skey);
+		//if this node covers the interval in which skey should be stored
+		if (pred != null && inInterval(kid, pred.id, info.id, true))
 			return get(info, skey);
 		else {
-			NodeInfo succ = this.findSuccessor(id);
+			NodeInfo succ = this.findSuccessor(kid);
 			return get(succ, skey);
 		}
 	}
@@ -606,12 +680,13 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	 * Delete a value under a key in the network.
 	 */
 	public void deleteNet(String skey, String v) throws Failed {
-		int id = NodeKey(skey);
-		//if the key's id is equal to the nodes id then delete it locally
-		if (info.id == id)
+		NodeInfo pred = getPred();
+		int kid = NodeKey(skey);
+		//if this node covers the interval in which skey should be stored
+		if (pred != null && inInterval(kid, pred.id, info.id, true))
 			delete(info, skey, v);
 		else {
-			NodeInfo succ = this.findSuccessor(id);
+			NodeInfo succ = this.findSuccessor(kid);
 			delete(succ, skey, v);
 		}
 	}
@@ -649,6 +724,8 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		 * that it keeps its own bindings, to which it adds those it transfers
 		 * from us.
 		 */
+
+	
 	}
 
 	/*

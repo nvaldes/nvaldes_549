@@ -53,6 +53,30 @@ public class NodeResource {
 	public Response getPred() {
 		return new NodeService(headers, uriInfo).getPred();
 	}
+	
+	@GET
+	@Path("succ")
+	@Produces("application/xml")
+	public Response getSucc() {
+		return new NodeService(headers, uriInfo).getSucc();
+	}
+	
+	
+
+	@PUT
+	@Path("notify")
+	@Consumes("application/xml")
+	@Produces("application/xml")
+	/*
+	 * Actually returns a TableRep (annotated with @XmlRootElement)
+	 */
+	public Response putNotify(TableRep predDb) {
+		/*
+		 * See the comment for WebClient::notify (the client side of this logic).
+		 */
+		return new NodeService(headers, uriInfo).notify(predDb);
+		// NodeInfo p = predDb.getInfo();
+	}
 
 	@GET
 	@Path("find")
@@ -60,6 +84,30 @@ public class NodeResource {
 	public Response findSuccessor(@QueryParam("id") String index) {
 		int id = Integer.parseInt(index);
 		return new NodeService(headers, uriInfo).findSuccessor(id);
+	}
+	
+	@GET
+	@Path("finger")
+	@Produces("application/xml")
+	public Response getFinger(@QueryParam("id") String index) {
+		int id = Integer.parseInt(index);
+		return new NodeService(headers, uriInfo).closestPrecedingFinger(id);
+	}
+	
+	@GET
+	@Produces("application/xml")
+	public Response getBinding(@QueryParam("key") String key) {
+		return new NodeService(headers, uriInfo).getBinding(key);
+	}
+	
+	@PUT
+	public Response putBinding(@QueryParam("key") String key, @QueryParam("val") String val) {
+		return new NodeService(headers, uriInfo).addBinding(key, val);
+	}
+	
+	@DELETE
+	public Response deleteBinding(@QueryParam("key") String key, @QueryParam("val") String val) {
+		return new NodeService(headers, uriInfo).deleteBinding(key, val);
 	}
 	
 	@GET
