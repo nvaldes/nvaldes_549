@@ -56,6 +56,6 @@ public interface IDHTResource {
 	 */
 	public EventOutput listenForBindings(int id, String key);
 	
-	public void stopListening(int id, String key);
+	public void stopListening(int id, String key) throws Invalid;
 	
 }

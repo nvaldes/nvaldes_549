@@ -14,15 +14,13 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.glassfish.jersey.media.sse.SseFeature;
-
 @Path("/dht")
 public class NodeResource {
 
 	/*
 	 * Web service API.
 	 * 
-	 * TODO: Fill in the missing operations.
+	 * DONE: Fill in the missing operations.
 	 */
 
 	Logger log = Logger.getLogger(NodeResource.class.getCanonicalName());

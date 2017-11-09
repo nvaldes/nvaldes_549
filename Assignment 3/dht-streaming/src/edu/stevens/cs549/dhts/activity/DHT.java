@@ -1,5 +1,6 @@
 package edu.stevens.cs549.dhts.activity;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
@@ -753,9 +754,13 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 	}
 	
 	// Webmethod
-	public void stopListening(int id, String key) {
+	public void stopListening(int id, String key) throws Invalid {
 		// DONE remove event output stream from broadcaster
-		state.removeListener(id, key);
+		try {
+			state.removeListener(id, key);
+		} catch (IOException e) {
+			throw new Invalid("Invalid listener: id=" + id + ", key=" + key);
+		}
 	}
 		
 	/*
@@ -788,13 +793,23 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		eventSource.open();
 	}
 	
-	public void listenOff(String key) throws DHTBase.Failed {
+	public void listenOff(String skey) throws DHTBase.Failed {
 		/*
-		 * TODO: Stop listening for new binding events for this key.  Need to
+		 * DONE: Stop listening for new binding events for this key.  Need to
 		 * do a Web service call to the server node, to stop event generation,
 		 * as well as close the event source here at the client.
 		 */
-
+		int id = NodeKey(skey);
+		NodeInfo succ;
+		//if the key's id is equal to the nodes id then add it locally
+		if (info.id == id) {
+			succ = this.getNodeInfo();
+		}
+		else {
+			succ = this.findSuccessor(id);
+		}
+		client.listenOff(succ, id, skey);
+		state.removeCallback(skey);
 	}
 	
 	public void listeners() {

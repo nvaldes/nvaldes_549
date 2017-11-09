@@ -282,7 +282,7 @@ public class State implements IState, IRouting {
 	private Map<Integer,Map<String,EventOutput>> outputs = new HashMap<Integer,Map<String,EventOutput>>();
 	
 	public void addListener(int id, String key, EventOutput os) {
-		// TODO Auto-generated method stub
+		// DONE Auto-generated method stub
 		Map<String,EventOutput> curr = outputs.remove(id);
 		if (curr == null) {
 			curr = new HashMap<String,EventOutput>();
@@ -297,8 +297,21 @@ public class State implements IState, IRouting {
 		listeners.put(key, currBroadcaster);
 	}
 	
-	public void removeListener(int id, String key) {
-		// TODO Close the event output stream.
+	public void removeListener(int id, String key) throws IOException {
+		// DONE Close the event output stream.
+		SseBroadcaster broadcaster = listeners.remove(key);
+		Map<String,EventOutput> curr = outputs.remove(id);
+		if (broadcaster == null || curr == null) {
+			return;
+		}
+		EventOutput os = curr.remove(key);
+		if (os == null) {
+			return;
+		}
+		broadcaster.remove(os);
+		os.close();
+		outputs.put(id, curr);
+		listeners.put(key, broadcaster);
 		
 	}
 	

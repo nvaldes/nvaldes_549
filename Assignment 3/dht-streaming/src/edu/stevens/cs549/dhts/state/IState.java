@@ -101,7 +101,7 @@ public interface IState {
 	 */
 	public void addListener(int id, String key, EventOutput os);
 	
-	public void removeListener(int id, String key);
+	public void removeListener(int id, String key) throws IOException;
 	
 	/*
 	 * Client-side callbacks.

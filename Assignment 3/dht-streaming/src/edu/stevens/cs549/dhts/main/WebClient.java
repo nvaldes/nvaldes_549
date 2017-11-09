@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -32,7 +31,7 @@ public class WebClient {
 	/*
 	 * Encapsulate Web client operations here.
 	 * 
-	 * TODO: Fill in missing operations.
+	 * DONE: Fill in missing operations.
 	 */
 
 	/*
@@ -233,7 +232,7 @@ public class WebClient {
 	}
 	
 	public EventSource listenForBindings(NodeInfo node, int id, String skey) throws DHTBase.Failed {
-		// TODO? listen for SSE subscription requests on http://.../dht/listen?key=<key>
+		// DONE listen for SSE subscription requests on http://.../dht/listen?key=<key>
 		// On the service side, don't expect LT request or response headers for this request.
 		// Note: "id" is client's id, to enable us to stop event generation at the server.
 		URI path = UriBuilder.fromUri(node.addr).path("listen").queryParam("id", id).queryParam("key", skey).build();
@@ -248,8 +247,14 @@ public class WebClient {
 	}
 
 	public void listenOff(NodeInfo node, int id, String skey) throws DHTBase.Failed {
-		// TODO listen for SSE subscription requests on http://.../dht/listen?key=<key>
+		// DONE listen for SSE subscription requests on http://.../dht/listen?key=<key>
 		// On the service side, don't expect LT request or response headers for this request.
+		URI path = UriBuilder.fromUri(node.addr).path("listen").queryParam("id", id).queryParam("key", skey).build();
+		info("client listenOff(" + path + ")");
+		Response response = deleteRequest(path);
+		if (response == null || response.getStatus() >= 300) {
+			throw new DHTBase.Failed("DELETE /listen?id=" + id + "&key=" + skey);
+		}
 	}
 
 }
