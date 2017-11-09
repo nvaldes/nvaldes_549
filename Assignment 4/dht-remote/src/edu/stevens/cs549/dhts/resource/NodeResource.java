@@ -3,6 +3,7 @@ package edu.stevens.cs549.dhts.resource;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -19,7 +20,7 @@ public class NodeResource {
 	/*
 	 * Web service API.
 	 * 
-	 * TODO: Fill in the missing operations.
+	 * DONE: Fill in the missing operations.
 	 */
 
 	Logger log = Logger.getLogger(NodeResource.class.getCanonicalName());
@@ -50,6 +51,15 @@ public class NodeResource {
 	public Response getPred() {
 		return new NodeService(headers, uriInfo).getPred();
 	}
+	
+	@GET
+	@Path("succ")
+	@Produces("application/xml")
+	public Response getSucc() {
+		return new NodeService(headers, uriInfo).getSucc();
+	}
+	
+	
 
 	@PUT
 	@Path("notify")
@@ -72,6 +82,30 @@ public class NodeResource {
 	public Response findSuccessor(@QueryParam("id") String index) {
 		int id = Integer.parseInt(index);
 		return new NodeService(headers, uriInfo).findSuccessor(id);
+	}
+	
+	@GET
+	@Path("finger")
+	@Produces("application/xml")
+	public Response getFinger(@QueryParam("id") String index) {
+		int id = Integer.parseInt(index);
+		return new NodeService(headers, uriInfo).closestPrecedingFinger(id);
+	}
+	
+	@GET
+	@Produces("application/xml")
+	public Response getBinding(@QueryParam("key") String key) {
+		return new NodeService(headers, uriInfo).getBinding(key);
+	}
+	
+	@PUT
+	public Response putBinding(@QueryParam("key") String key, @QueryParam("val") String val) {
+		return new NodeService(headers, uriInfo).addBinding(key, val);
+	}
+	
+	@DELETE
+	public Response deleteBinding(@QueryParam("key") String key, @QueryParam("val") String val) {
+		return new NodeService(headers, uriInfo).deleteBinding(key, val);
 	}
 
 }
