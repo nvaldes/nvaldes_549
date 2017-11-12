@@ -777,13 +777,20 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		 * (for both the listen on and listen off requests).
 		 */
 		int id = NodeKey(skey);
-		NodeInfo succ;
-		//if the key's id is equal to the nodes id then add it locally
-		if (info.id == id) {
-			succ = this.getNodeInfo();
-		}
-		else {
-			succ = this.findSuccessor(id);
+		NodeInfo info = getNodeInfo();
+		NodeInfo succ = getSucc(info);
+		if (info.id != succ.id) {
+			while (!inInterval(id, info.id, succ.id)) {
+				info = getSucc(info);
+				succ = getSucc(info);
+				/*
+				 * Break out of infinite loop (e.g. our successor may be
+				 * a single-node network that still points to itself).
+				 */
+				if (getNodeInfo().equals(info)) {
+					break;
+				}
+			}
 		}
 		Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
 		WebTarget target = client.target(UriBuilder.fromUri(succ.addr).path("listen").queryParam("id", this.getNodeInfo().id).queryParam("key", skey).build());
@@ -800,13 +807,20 @@ public class DHT extends DHTBase implements IDHTResource, IDHTNode, IDHTBackgrou
 		 * as well as close the event source here at the client.
 		 */
 		int id = NodeKey(skey);
-		NodeInfo succ;
-		//if the key's id is equal to the nodes id then add it locally
-		if (info.id == id) {
-			succ = this.getNodeInfo();
-		}
-		else {
-			succ = this.findSuccessor(id);
+		NodeInfo info = getNodeInfo();
+		NodeInfo succ = getSucc(info);
+		if (info.id != succ.id) {
+			while (!inInterval(id, info.id, succ.id)) {
+				info = getSucc(info);
+				succ = getSucc(info);
+				/*
+				 * Break out of infinite loop (e.g. our successor may be
+				 * a single-node network that still points to itself).
+				 */
+				if (getNodeInfo().equals(info)) {
+					break;
+				}
+			}
 		}
 		client.listenOff(succ, id, skey);
 		state.removeCallback(skey);
