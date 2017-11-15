@@ -9,11 +9,13 @@ import java.util.logging.Logger;
 
 import javax.websocket.ClientEndpointConfig;
 import javax.websocket.CloseReason;
+import javax.websocket.ContainerProvider;
 import javax.websocket.DeploymentException;
 import javax.websocket.Endpoint;
 import javax.websocket.EndpointConfig;
 import javax.websocket.MessageHandler;
 import javax.websocket.Session;
+import javax.websocket.WebSocketContainer;
 
 import edu.stevens.cs549.dhts.main.IShell;
 import edu.stevens.cs549.dhts.main.Log;
@@ -25,7 +27,7 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 	private final CountDownLatch messageLatch = new CountDownLatch(1);
 
 	// TODO configure the client to use proper encoder for messages sent to server
-	private final ClientEndpointConfig cec = null;
+	private final ClientEndpointConfig cec = ClientEndpointConfig.Builder.create().build();
 	
 	private final ShellManager shellManager = ShellManager.getShellManager();
 
@@ -37,19 +39,22 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 
 	public ControllerClient(IShell shell) {
 		this.shell = shell;
+		
 	}
 	
 	public void connect(URI uri) throws DeploymentException, IOException {
 		try {
-			shell.msg("Requesting control of node at " + uri.toString() + "...");
+			shell.msg("Requesting control of node at " + uri.toString() + "...\n");
 			// TODO make the connection request
-
+			WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+			this.session = container.connectToServer(this, cec, uri);
 			while (true) {
 				try {
 					// Synchronize with receipt of an ack from the remote node.
 					boolean connected = messageLatch.await(100, TimeUnit.SECONDS);
 					// TODO If we are connected, a new toplevel shell has been pushed, execute its CLI.
 					// Be sure to return when done, to exit the loop.
+					return;
 
 				} catch (InterruptedException e) {
 					// Keep on waiting for the specified time interval
@@ -69,7 +74,8 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 	public void onOpen(Session session, EndpointConfig config) {
 		// TODO session created, add a message handler for receiving communication from server.
 		// We should also cache the session for use by some of the other operations.
-
+		this.session = session;
+		this.session.addMessageHandler(this);
 	}
 
 	@Override
@@ -95,8 +101,8 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 	
 	@Override
 	public void onClose(Session session, CloseReason reason) {
-		Log.info("Server closed Websocket connection: "+reason.getReasonPhrase());
 		try {
+			shell.msg("Server closed Websocket connection: " + reason.getReasonPhrase() + "\n");
 			shutdown();
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Failure while trying to report connection error.", e);
@@ -120,6 +126,8 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 		 * 2. We are running an on-going remote control session (need to remove the proxy shell).
 		 * 3. The remote control session has terminated (which caused the channel to be closed).
 		 */
-
+		if (initializing) {
+			endInitialization();
+		}
 	}
 }

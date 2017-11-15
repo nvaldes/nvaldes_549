@@ -5,6 +5,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import javax.websocket.CloseReason;
 import javax.websocket.Session;
 
 /**
@@ -28,6 +29,10 @@ public class SessionManager {
 	private Lock lock = new ReentrantLock();
 	
 	private ControllerServer currentServer;
+	
+	private CloseReason closeReason(String reason) {
+		return new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, reason);
+	}
 	
 	public boolean isSession() {
 		return currentServer != null;
@@ -69,8 +74,10 @@ public class SessionManager {
 	public void rejectSession() {
 		lock.lock();
 		try {
-			// TODO reject remote control request by closing the session (provide a reason!)
-
+			// DONE reject remote control request by closing the session (provide a reason!)
+			this.getCurrentSession().close(this.closeReason("Session Rejected"));
+		} catch (IOException e) {
+			logger.severe(e.getMessage());
 		} finally {
 			lock.unlock();
 		}
@@ -79,8 +86,10 @@ public class SessionManager {
 	public void closeCurrentSession() {
 		lock.lock();
 		try {
-			// TODO normal shutdown of remote control session (provide a reason!)
-
+			// DONE normal shutdown of remote control session (provide a reason!)
+			this.getCurrentSession().close(this.closeReason("Session Closed"));
+		} catch (IOException e) {
+			logger.severe(e.getMessage());
 		} finally {
 			lock.unlock();
 		}

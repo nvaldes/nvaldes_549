@@ -134,13 +134,14 @@ public abstract class ShellBase implements IShell {
 	}
 
 	/**
-	 * TODO Reject and remove the pending session (see SessionManager).
+	 * DONE Reject and remove the pending session (see SessionManager).
 	 */
 	protected void reject(String[] inputs) throws IOException {
 		if (inputs.length != 1) {
 			msgln("Usage: reject");
 		} else {
-			// TODO
+			// DONE
+			sessionManager.rejectSession();
 		}
 	}
 
