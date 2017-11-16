@@ -6,7 +6,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import javax.websocket.CloseReason;
+import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
+
+import edu.stevens.cs549.dhts.main.LocalShell;
 
 /**
  * Maintain a stack of shells.
@@ -21,6 +24,8 @@ public class SessionManager {
 	public static final String ACK = "ACK";
 	
 	private static final SessionManager SESSION_MANAGER = new SessionManager();
+	
+	private ShellManager shellManager = ShellManager.getShellManager();
 	
 	public static SessionManager getSessionManager() {
 		return SESSION_MANAGER;
@@ -60,11 +65,17 @@ public class SessionManager {
 		lock.lock();
 		try {
 			/*
-			 *  TODO We are accepting a remote control request.  Push a local shell with a proxy context
+			 *  DONE We are accepting a remote control request.  Push a local shell with a proxy context
 			 *  on the shell stack and flag that initialization has completed.  Confirm acceptance of the 
 			 *  remote control request by sending an ACK to the client.  The CLI of the newly installed shell
 			 *  will be executed by the underlying CLI as part of the "accept" command.
 			 */
+			RemoteEndpoint.Basic remote = this.getCurrentSession().getBasicRemote();
+			ProxyContext context = ProxyContext.createProxyContext(remote);
+			LocalShell shell = LocalShell.createRemotelyControlled(shellManager.getCurrentShell().getLocal(), context);
+			shellManager.addShell(shell);
+			remote.sendText(ACK);
+			currentServer.endInitialization();
 
 		} finally {
 			lock.unlock();

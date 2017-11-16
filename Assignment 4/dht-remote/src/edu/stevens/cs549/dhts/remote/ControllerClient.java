@@ -2,6 +2,7 @@ package edu.stevens.cs549.dhts.remote;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -26,8 +27,11 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 
 	private final CountDownLatch messageLatch = new CountDownLatch(1);
 
-	// TODO configure the client to use proper encoder for messages sent to server
-	private final ClientEndpointConfig cec = ClientEndpointConfig.Builder.create().build();
+	// DONE configure the client to use proper encoder for messages sent to server
+	private final ClientEndpointConfig cec = ClientEndpointConfig.Builder
+			.create()
+			.encoders(Arrays.asList(CommandLineEncoder.class))
+			.build();
 	
 	private final ShellManager shellManager = ShellManager.getShellManager();
 
@@ -45,15 +49,18 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 	public void connect(URI uri) throws DeploymentException, IOException {
 		try {
 			shell.msg("Requesting control of node at " + uri.toString() + "...\n");
-			// TODO make the connection request
+			// DONE make the connection request
 			WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 			this.session = container.connectToServer(this, cec, uri);
 			while (true) {
 				try {
 					// Synchronize with receipt of an ack from the remote node.
-					boolean connected = messageLatch.await(100, TimeUnit.SECONDS);
-					// TODO If we are connected, a new toplevel shell has been pushed, execute its CLI.
-					// Be sure to return when done, to exit the loop.
+					boolean connected = messageLatch.await(100, TimeUnit.SECONDS);	
+					if (connected) {
+						// DONE If we are connected, a new toplevel shell has been pushed, execute its CLI.
+						shell.cli();
+					}
+					// Be sure to return when done, to exit the loop;
 					return;
 
 				} catch (InterruptedException e) {
@@ -72,7 +79,7 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 
 	@Override
 	public void onOpen(Session session, EndpointConfig config) {
-		// TODO session created, add a message handler for receiving communication from server.
+		// DONE session created, add a message handler for receiving communication from server.
 		// We should also cache the session for use by some of the other operations.
 		this.session = session;
 		this.session.addMessageHandler(this);
@@ -83,19 +90,23 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 		if (initializing) {
 			if (SessionManager.ACK.equals(message)) {
 				/*
-				 * TODO server has accepted our remote control request, push a proxy shell on the shell stack
+				 * DONE server has accepted our remote control request, push a proxy shell on the shell stack
 				 * and flag that initialization has finished (allowing the UI thread to continue).
 				 * Make sure to replace the cached shell in this callback with the new proxy shell!
 				 * 
 				 * If the server rejects our request, they will just close the channel.
 				 */
+				IShell proxyShell = ProxyShell.createRemoteController(this.shell, this.session.getBasicRemote());
+				shellManager.addShell(proxyShell);
+				this.shell = proxyShell;
+				this.endInitialization();
 
 			} else {
 				throw new IllegalStateException("Unexpected response to remote control request: " + message);
 			}
 		} else {
 			// TODO provide the message to the shell
-
+			return;
 		}
 	}
 	
@@ -128,6 +139,8 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 		 */
 		if (initializing) {
 			endInitialization();
+		} else {
+			return;
 		}
 	}
 }

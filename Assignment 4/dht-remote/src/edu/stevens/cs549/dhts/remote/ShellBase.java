@@ -121,7 +121,7 @@ public abstract class ShellBase implements IShell {
 	}
 
 	/**
-	 * TODO Accept the pending session (see SessionManager) and 
+	 * DONE Accept the pending session (see SessionManager) and 
 	 * start running the CLI for the new shell that will have been
 	 * pushed on the shell stack.
 	 */
@@ -129,7 +129,9 @@ public abstract class ShellBase implements IShell {
 		if (inputs.length != 1) {
 			msgln("Usage: accept");
 		} else {
-			// TODO
+			// DONE
+			sessionManager.acceptSession();
+			shellManager.getCurrentShell().cli();
 		}
 	}
 

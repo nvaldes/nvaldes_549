@@ -17,7 +17,7 @@ import edu.stevens.cs549.dhts.main.IShell;
 /*
  * DONE annotate this as a server endpoint, including callback operations and decoders.
  */
-@ServerEndpoint(value = "/control/{client}", decoders = {})
+@ServerEndpoint(value = "/control/{client}", decoders = {CommandLineDecoder.class})
 public class ControllerServer {
 	
 	private static final Logger logger = Logger.getLogger(ControllerServer.class.getCanonicalName());
@@ -58,8 +58,7 @@ public class ControllerServer {
     }
 	
 	@OnMessage
-    public void onMessage(String message) {
-		String[] commandLine = message.split("\n");
+    public void onMessage(String[] commandLine) {
 		if (initializing) {
 			throw new IllegalStateException("Communication from client before ack of remote control request: " + commandLine[0]);
 		} else if (commandLine.length > 0 && IShell.QUIT.equals(commandLine[0])) {
