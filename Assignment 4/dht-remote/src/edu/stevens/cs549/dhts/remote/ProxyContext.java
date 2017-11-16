@@ -2,6 +2,8 @@ package edu.stevens.cs549.dhts.remote;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.logging.Logger;
@@ -78,20 +80,23 @@ public class ProxyContext extends ContextBase {
 
 	@Override
 	public void msg(String m) throws IOException {
-		// TODO display the message on the remote client console
-
+		// DONE display the message on the remote client console
+		sender.sendText(m);
 	}
 
 	@Override
 	public void msgln(String m) throws IOException {
-		// TODO display the message on the remote client console
-
+		// DONE display the message on the remote client console
+		sender.sendText(m + "\n");
 	}
 
 	@Override
 	public void err(Throwable t) throws IOException {
-		// TODO print the stack trace on the remote client console
-
+		// DONE print the stack trace on the remote client console
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		t.printStackTrace(pw);
+		sender.sendText(sw.toString());
 	}
 
 	@Override

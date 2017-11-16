@@ -87,6 +87,7 @@ public class SessionManager {
 		try {
 			// DONE reject remote control request by closing the session (provide a reason!)
 			this.getCurrentSession().close(this.closeReason("Session Rejected"));
+			this.currentServer = null;
 		} catch (IOException e) {
 			logger.severe(e.getMessage());
 		} finally {
@@ -99,6 +100,7 @@ public class SessionManager {
 		try {
 			// DONE normal shutdown of remote control session (provide a reason!)
 			this.getCurrentSession().close(this.closeReason("Session Closed"));
+			this.currentServer = null;
 		} catch (IOException e) {
 			logger.severe(e.getMessage());
 		} finally {

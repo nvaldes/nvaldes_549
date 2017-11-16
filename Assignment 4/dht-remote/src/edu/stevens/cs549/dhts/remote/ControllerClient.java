@@ -105,8 +105,12 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 				throw new IllegalStateException("Unexpected response to remote control request: " + message);
 			}
 		} else {
-			// TODO provide the message to the shell
-			return;
+			// DONE provide the message to the shell
+			try {
+				shell.msg(message);
+			} catch (IOException e) {
+				return;
+			}
 		}
 	}
 	
