@@ -48,16 +48,17 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 	
 	public void connect(URI uri) throws DeploymentException, IOException {
 		try {
-			shell.msg("Requesting control of node at " + uri.toString() + "...\n");
+			shell.msg("Requesting control of node at " + uri.toString() + "...");
 			// DONE make the connection request
 			WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 			this.session = container.connectToServer(this, cec, uri);
 			while (true) {
 				try {
 					// Synchronize with receipt of an ack from the remote node.
-					boolean connected = messageLatch.await(100, TimeUnit.SECONDS);	
-					if (connected) {
+					boolean connected = messageLatch.await(100, TimeUnit.SECONDS);
+					if (connected && shell != shellManager.getCurrentShell()) {
 						// DONE If we are connected, a new toplevel shell has been pushed, execute its CLI.
+						shell = shellManager.getCurrentShell();
 						shell.cli();
 					}
 					// Be sure to return when done, to exit the loop;
@@ -98,8 +99,12 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 				 */
 				IShell proxyShell = ProxyShell.createRemoteController(this.shell, this.session.getBasicRemote());
 				shellManager.addShell(proxyShell);
-				this.shell = proxyShell;
 				this.endInitialization();
+				try {
+					this.shell.msg("\n");
+				} catch (IOException e) {
+					logger.log(Level.SEVERE, "Failure while trying to initialized session.", e);
+				}
 
 			} else {
 				throw new IllegalStateException("Unexpected response to remote control request: " + message);
@@ -109,7 +114,7 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 			try {
 				shell.msg(message);
 			} catch (IOException e) {
-				return;
+				logger.log(Level.SEVERE, "Failure while trying to print message.", e);
 			}
 		}
 	}
@@ -117,7 +122,7 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 	@Override
 	public void onClose(Session session, CloseReason reason) {
 		try {
-			shell.msg("Server closed Websocket connection: " + reason.getReasonPhrase() + "\n");
+			shell.msgln(reason.getReasonPhrase());
 			shutdown();
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Failure while trying to report connection error.", e);
@@ -143,8 +148,14 @@ public class ControllerClient extends Endpoint implements MessageHandler.Whole<S
 		 */
 		if (initializing) {
 			endInitialization();
+		} else if (shell == shellManager.getCurrentShell()) {
+			shellManager.removeShell();
+			shell = shellManager.getCurrentShell();
+			shell.cli();
 		} else {
-			return;
+			shell = shellManager.getCurrentShell();
+			shell.cli();
 		}
+		
 	}
 }
