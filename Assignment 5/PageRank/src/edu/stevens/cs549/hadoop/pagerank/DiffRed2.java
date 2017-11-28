@@ -12,6 +12,6 @@ public class DiffRed2 extends Reducer<Text, Text, Text, Text> {
 		/* 
 		 * TODO: Compute and emit the maximum of the differences
 		 */
-
+		return;
 	}
 }

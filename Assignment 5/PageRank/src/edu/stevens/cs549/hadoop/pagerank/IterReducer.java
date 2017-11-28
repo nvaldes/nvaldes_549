@@ -15,5 +15,6 @@ public class IterReducer extends Reducer<Text, Text, Text, Text> {
 		 * Use PageRank algorithm to compute rank from weights contributed by incoming edges.
 		 * Remember that one of the values will be marked as the adjacency list for the node.
 		 */
+		return;
 	}
 }

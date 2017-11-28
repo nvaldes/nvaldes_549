@@ -26,8 +26,7 @@ public class IterMapper extends Mapper<LongWritable, Text, Text, Text> {
 		 * Remember to also emit the input adjacency list for this node!
 		 * Put a marker on the string value to indicate it is an adjacency list.
 		 */
-
-
+		return;
 	}
 
 }

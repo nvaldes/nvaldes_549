@@ -14,7 +14,7 @@ public class FinMapper extends Mapper<LongWritable, Text, DoubleWritable, Text> 
 		 * TODO output key:-rank, value: node
 		 * See IterMapper for hints on parsing the output of IterReducer.
 		 */
-
+		return;
 	}
 
 }
