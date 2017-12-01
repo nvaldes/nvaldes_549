@@ -9,11 +9,12 @@ public class DiffMap2 extends Mapper<LongWritable, Text, Text, Text> {
 
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException,
 			IllegalArgumentException {
-		String s = value.toString(); // Converts Line to a String
+		String[] s = value.toString().split("\t");
 
 		/* 
-		 * TODO: emit: key:"Difference" value:difference calculated in DiffRed1
+		 * DONE: emit: key:"Difference" value:difference calculated in DiffRed1
 		 */
+		context.write(new Text("Difference"), new Text(s[1]));
 
 	}
 

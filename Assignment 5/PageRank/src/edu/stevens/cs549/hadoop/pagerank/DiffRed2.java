@@ -8,10 +8,16 @@ import org.apache.hadoop.io.*;
 public class DiffRed2 extends Reducer<Text, Text, Text, Text> {
 
 	public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-		double diff_max = 0.0; // sets diff_max to a default value
+		Double diff_max = 0.0; // sets diff_max to a default value
 		/* 
-		 * TODO: Compute and emit the maximum of the differences
+		 * DONE: Compute and emit the maximum of the differences
 		 */
-		return;
+		for (Text t : values) {
+			double curr = Double.parseDouble(t.toString());
+			if (curr > diff_max) {
+				diff_max = curr;
+			}
+		}
+		context.write(new Text(diff_max.toString()), new Text());
 	}
 }

@@ -12,6 +12,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class PageRankDriver {
@@ -33,8 +35,6 @@ public class PageRankDriver {
 				// Sends data to the functions
 			} else if (job.equals("iter")) {
 				iter(args[1], args[2], Integer.parseInt(args[3]));
-			} else if (job.equals("finish")) {
-				finish(args[1], args[2], Integer.parseInt(args[3]));
 			} else // In case the function name doesn't match up
 			{
 				System.err
@@ -46,6 +46,8 @@ public class PageRankDriver {
 			{
 				diff(args[1], args[2], args[3], Integer.parseInt(args[4])); 
 				// Parses data to diff
+			} else if (job.equals("finish")) {
+				finish(args[1], args[2], args[3], Integer.parseInt(args[4]));
 			} else // In case the function name doesn't match up
 			{
 				System.err
@@ -93,7 +95,7 @@ public class PageRankDriver {
 		job.setOutputValueClass(Text.class);
 
 		// Prints message on successful completion or in case of an error
-		System.out.print(job.waitForCompletion(true) ? "Init Job Completed" : "Init Job Error");
+		System.out.println(job.waitForCompletion(true) ? "Init Job Completed" : "Init Job Error");
 	}
 
 	static void iter(String input, String output, int reducers)
@@ -119,7 +121,7 @@ public class PageRankDriver {
 		job.setOutputValueClass(Text.class);
 
 		// Prints message on successful completion or in case of an error
-		System.out.print(job.waitForCompletion(true) ? "Iter Job Completed" : "Iter Job Error");
+		System.out.println(job.waitForCompletion(true) ? "Iter Job Completed" : "Iter Job Error");
 
 	}
 
@@ -165,14 +167,14 @@ public class PageRankDriver {
 
 			// If Job is completed, prints message, else prints an error
 			System.out
-					.print(job1.waitForCompletion(true) ? "Diff Job Completed"
+					.println(job1.waitForCompletion(true) ? "Diff Job Completed"
 							: "Diff Job Error");
 			deleteDirectory("tempdiff"); // Deletes the temporary directory "tempdiff"
 		}
 
 	}
 
-	static void finish(String input, String output, int reducers)
+	static void finish(String input, String names, String output, int reducers)
 			throws Exception {
 		System.out.println("Finish Job Started");
 		Job job = Job.getInstance(); // Creates a new Job
@@ -180,7 +182,7 @@ public class PageRankDriver {
 		job.setNumReduceTasks(reducers); // Sets the number of reducers
 
 		FileInputFormat.addInputPath(job, new Path(input)); // Adds input and output paths
-		FileOutputFormat.setOutputPath(job, new Path(output));
+		FileOutputFormat.setOutputPath(job, new Path("tempfinish"));
 
 		job.setMapperClass(FinMapper.class); // Sets Mapper and Reducer Classes
 		job.setReducerClass(FinReducer.class);
@@ -190,18 +192,44 @@ public class PageRankDriver {
 
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
+		
+		if (job.waitForCompletion(true)) // Once the first job completes
+		{
+			System.out.println("Finish Complete, Names Join Started");
+			Job job1 = Job.getInstance(); // Creates a new second job
+			job1.setJarByClass(PageRankDriver.class); // Sets driver class and number of reducers
+			job1.setNumReduceTasks(reducers);
+			
+			MultipleInputs.addInputPath(job1, new Path("tempfinish"), TextInputFormat.class, JoinMapper.class);
+			MultipleInputs.addInputPath(job1, new Path(names), TextInputFormat.class, NamesMapper.class);
 
-		// Prints message on successful completion or error.
-		System.out.print(job.waitForCompletion(true) ? "Finish Job Completed" : "Finish Job Error");
-		// Exits once job finishes.
-		deleteDirectory(input); // Deletes the input directory
+			FileOutputFormat.setOutputPath(job1, new Path(output)); // Sets output
 
+//			job1.setMapperClass(JoinMapper.class); // Sets Mapper and Reducer classes for second job
+			job1.setReducerClass(JoinReducer.class);
+
+//			job1.setMapOutputKeyClass(Text.class); // Sets output class for second job
+//			job1.setMapOutputValueClass(Text.class);
+
+			job1.setOutputKeyClass(Text.class);
+			job1.setOutputValueClass(Text.class);
+
+			// If Job is completed, prints message, else prints an error
+			try {
+				System.out.println(job1.waitForCompletion(true) ? "Names Join Completed" : "Names Join Error");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			deleteDirectory("tempfinish"); // Deletes the temporary directory "tempfinish"
+			deleteDirectory(input); // Deletes the input directory
+		}
 	}
 
 	public static void composite(String input, String output, String interim1,
-			String interim2, String diff, int reducers) throws Exception {
+			String interim2, String names, int reducers) throws Exception {
 		/*
-		 * TODO?  Name changed. 
+		 * DONE  Name changed. 
 		 */
 		System.out.println("Noriel Valdes (nvaldes)");
 		
@@ -250,13 +278,13 @@ public class PageRankDriver {
 		{
 			deleteDirectory(interim1); // deletes other directory
 			counter++;
-			finish(interim2, output, reducers);
+			finish(interim2, names, output, reducers);
 			summarizeResult(output);
 		} else // for even i, interim1 is the input directory
 		{
 			deleteDirectory(interim2); // Deletes other directory
 			counter++;
-			finish(interim1, output, reducers);
+			finish(interim1, names, output, reducers);
 			summarizeResult(output);
 		}
 		System.out.println();

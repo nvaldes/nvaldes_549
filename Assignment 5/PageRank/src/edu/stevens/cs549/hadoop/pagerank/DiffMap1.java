@@ -16,9 +16,10 @@ public class DiffMap1 extends Mapper<LongWritable, Text, Text, Text> {
 			throw new IOException("Incorrect data format");
 		}
 		/**
-		 *  TODO: read node-rank pair and emit: key:node, value:rank
+		 *  DONE: read node-rank pair and emit: key:node, value:rank
 		 */
-
+		String[] nodeRank = sections[0].split(" ");
+		context.write(new Text(nodeRank[0]), new Text(nodeRank[1]));
 	}
 
 }
