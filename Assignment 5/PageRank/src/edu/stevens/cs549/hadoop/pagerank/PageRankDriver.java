@@ -181,14 +181,16 @@ public class PageRankDriver {
 		job.setJarByClass(PageRankDriver.class); // Sets the Driver class
 		job.setNumReduceTasks(reducers); // Sets the number of reducers
 
-		FileInputFormat.addInputPath(job, new Path(input)); // Adds input and output paths
+//		FileInputFormat.addInputPath(job, new Path(input)); // Adds input and output paths
+		MultipleInputs.addInputPath(job, new Path(input), TextInputFormat.class, JoinMapper.class);
+		MultipleInputs.addInputPath(job, new Path(names), TextInputFormat.class, NamesMapper.class);
 		FileOutputFormat.setOutputPath(job, new Path("tempfinish"));
 
-		job.setMapperClass(FinMapper.class); // Sets Mapper and Reducer Classes
-		job.setReducerClass(FinReducer.class);
+//		job.setMapperClass(FinMapper.class); // Sets Mapper and Reducer Classes
+		job.setReducerClass(JoinReducer.class);
 
-		job.setMapOutputKeyClass(DoubleWritable.class); // Sets Mapper and Reducer output types
-		job.setMapOutputValueClass(Text.class);
+//		job.setMapOutputKeyClass(DoubleWritable.class); // Sets Mapper and Reducer output types
+//		job.setMapOutputValueClass(Text.class);
 
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
@@ -200,16 +202,16 @@ public class PageRankDriver {
 			job1.setJarByClass(PageRankDriver.class); // Sets driver class and number of reducers
 			job1.setNumReduceTasks(reducers);
 			
-			MultipleInputs.addInputPath(job1, new Path("tempfinish"), TextInputFormat.class, JoinMapper.class);
-			MultipleInputs.addInputPath(job1, new Path(names), TextInputFormat.class, NamesMapper.class);
-
+//			MultipleInputs.addInputPath(job1, new Path("tempfinish"), TextInputFormat.class, JoinMapper.class);
+//			MultipleInputs.addInputPath(job1, new Path(names), TextInputFormat.class, NamesMapper.class);
+			FileInputFormat.addInputPath(job1, new Path("tempfinish"));
 			FileOutputFormat.setOutputPath(job1, new Path(output)); // Sets output
 
-//			job1.setMapperClass(JoinMapper.class); // Sets Mapper and Reducer classes for second job
-			job1.setReducerClass(JoinReducer.class);
+			job1.setMapperClass(FinMapper.class); // Sets Mapper and Reducer classes for second job
+			job1.setReducerClass(FinReducer.class);
 
-//			job1.setMapOutputKeyClass(Text.class); // Sets output class for second job
-//			job1.setMapOutputValueClass(Text.class);
+			job1.setMapOutputKeyClass(DoubleWritable.class); // Sets output class for second job
+			job1.setMapOutputValueClass(Text.class);
 
 			job1.setOutputKeyClass(Text.class);
 			job1.setOutputValueClass(Text.class);

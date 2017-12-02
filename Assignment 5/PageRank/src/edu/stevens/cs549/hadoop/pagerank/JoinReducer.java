@@ -17,9 +17,9 @@ public class JoinReducer extends Reducer<Text, Text, Text, Text> {
 		if (vals.size() == 2) {
 			try {
 				Double.parseDouble(vals.get(1));
-				context.write(new Text(vals.get(0)), new Text(vals.get(1)));
+				context.write(new Text(vals.get(0).toString().substring(1)), new Text(vals.get(1)));
 			} catch (NumberFormatException e) {
-				context.write(new Text(vals.get(1)), new Text(vals.get(0)));
+				context.write(new Text(vals.get(1).toString().substring(1)), new Text(vals.get(0)));
 			}
 		}
 	}
