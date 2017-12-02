@@ -302,7 +302,7 @@ public class PageRankDriver {
 		Path finpath = new Path(path); // Creates new Path
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(URI.create(path), conf);
-		HashMap<Long, Double> values = new HashMap<Long, Double>(); 
+		HashMap<String, Double> values = new HashMap<String, Double>(); 
 		// HashMap to store Node, Rank Pairs
 		int size = 0;
 
@@ -320,7 +320,7 @@ public class PageRankDriver {
 						if (diffcontent != null) // Adds new value as long as value exists
 						{
 							String[] parts = diffcontent.split("\t");
-							long node = Long.parseLong(parts[0]);
+							String node = parts[0];
 							double rank = Double.parseDouble(parts[1]);
 							values.put(node, rank);
 							i++;
@@ -330,10 +330,10 @@ public class PageRankDriver {
 					d.close();
 				}
 			}
-			Long[] nodes = new Long[size];
+			String[] nodes = new String[size];
 			Double[] ranks = new Double[size];
 			int j = 0;
-			for (Map.Entry<Long, Double> entry : values.entrySet())
+			for (Map.Entry<String, Double> entry : values.entrySet())
 				/*
 				 *  Iterates over set and stores values in arrays
 				 */
@@ -352,7 +352,7 @@ public class PageRankDriver {
 						ranks[i] = ranks[k];
 						ranks[k] = temp;
 
-						Long temps = nodes[i]; // swaps
+						String temps = nodes[i]; // swaps
 						nodes[i] = nodes[k];
 						nodes[k] = temps;
 					}
